@@ -23,7 +23,7 @@
                             <label class="form-label">Task Owner:</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="text" class="form-control" name="owner" placeholder="Enter Name" required>
+                            <input type="text" class="form-control" name="task_owner" placeholder="Enter Name" required>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -31,7 +31,7 @@
                             <label class="form-label">Task Name *</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="text"  name="taskname" class="form-control" required>
+                            <input type="text" name="task_name" class="form-control" required>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -39,7 +39,7 @@
                             <label class="form-label">Description</label>
                         </div>
                         <div class="col-md-9">
-                            <textarea class="form-control" name="taskName"></textarea>
+                            <textarea class="form-control" name="description"></textarea>
                         </div>
                     </div>
                     <div class="row">
@@ -47,13 +47,13 @@
                             <label class="form-label">Start Date</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="date" class="form-control" name="startDate">
+                            <input type="date" class="form-control" name="start_date">
                         </div>
                         <div class="col-md-2 mb-3">
                             <label class="form-label">Due Date</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="date" class="form-control" name="dueDate">
+                            <input type="date" class="form-control" name="due_date">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -61,7 +61,7 @@
                             <label class="form-label">Reminder</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="datetime-local" class="form-control"  name="reminder">
+                            <input type="datetime-local" class="form-control" id="reminderInput" name="reminder">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -69,7 +69,7 @@
                             <label class="form-label">Priority</label>
                         </div>
                         <div class="col-md-9">
-                            <select class="form-select"  name="priority">
+                            <select class="form-select" name="priority">
 
                                 <option value="Moderate">Moderate</option>
                                 <option value="High">High</option>
@@ -82,10 +82,10 @@
                             <i class="fa-solid fa-plus h-5 mb-2 "></i>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label"  >Status *</label>
+                            <label class="form-label">Status *</label>
                         </div>
                         <div class="col-md-9">
-                            <select name="status"  class="form-select" required>
+                            <select name="status" class="form-select" required>
                                 <option value="Open">Open</option>
                                 <option value="Open">In Progress</option>
                                 <option value="Completed">Completed</option>
@@ -97,10 +97,8 @@
                     </div>
                     <div class="row">
                         <div class="col-12 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary"><a
-                                    href="http://127.0.0.1:5500/index2.html"></a>Submit</button>
-                            <button type="button" class="btn btn-primary" id="submitNew"><a
-                                    href="http://127.0.0.1:5500/index1.html"></a>Submit and New</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="button" class="btn btn-primary" id="submitNew" onclick="window.location.href='index1.html'">Submit and New</button>
                             <button type="button" class="btn btn-secondary">Cancel</button>
                         </div>
                     </div>
@@ -109,68 +107,46 @@
         </div>
     </div>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Form Submission
-              document.getElementById("taskForm").addEventListener("submit", function(event) {
-                    event.preventDefault();
+        document.getElementById("taskForm").addEventListener("submit", function (event) {
+            event.preventDefault();
 
-                    const formData = new FormData(this);
-                    const data = Object.fromEntries(formData);
+            const taskData = {
+                task_owner: document.querySelector("[name='task_owner']").value,
+                task_name: document.querySelector("[name='task_name']").value,
+                description: document.querySelector("[name='description']").value,
+                reminder: document.querySelector("[name='reminder']").value,
+                start_date: document.querySelector("[name='start_date']").value,
+                due_date: document.querySelector("[name='due_date']").value,
+                priority: document.querySelector("[name='priority']").value,
+                status: document.querySelector("[name='status']").value
+            };
 
-                    console.log("Data being sent:", JSON.stringify(data));
-                  
+            console.log(taskData);
+            fetch("http://localhost:5000/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(taskData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Task Added Response:", data); // Debugging
 
-                    fetch("http://localhost:3000/add-task", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(data)
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        console.log("Response:", result); // 🔹 Debugging step
-                        alert(result.message);
-                        window.location.href = "index2.html";
-                    })
-                    .catch(error => console.error("Fetch Error:", error));
-                });
-
-
-            // Submit and New (without redirect)
-            const submitNewButton = document.getElementById("submitNew");
-            if (submitNewButton) {
-                submitNewButton.addEventListener("click", function () {
-                    const formData = new FormData(document.getElementById("taskForm"));
-                    const data = Object.fromEntries(formData);
-
-                    fetch("http://localhost:3000/add-task", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(data)
-                    })
-                        .then(response => response.json())
-                        .then(result => {
-                            alert(result.message);
-                            document.getElementById("taskForm").reset(); // Reset form after submission
-                        })
-                        .catch(error => console.error("Error:", error));
-                });
-            } else {
-                console.error("Error: submitNew button not found in the DOM!");
-            }
-
-            console.log(document.getElementById("submitNew"));
-
+                    if (data.taskId) {
+                        alert("Task added successfully!");
+                        window.location.href = `index2.html?taskId=${data.taskId}`; // Redirect with taskId
+                    } else {
+                        alert("Error: Task ID missing in response");
+                    }
+                })
+                .catch(error => console.error("Add Task Error:", error));
         });
+
 
     </script>
 
 
 
-
+<script src="server.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -1,122 +1,137 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql");
-const cors = require("cors");
-const bodyParser = require("body-parser");
+const express = require("express"); // Import Express
+const mysql = require("mysql2"); // Import MySQL
+const cors = require("cors"); // Import CORS
 
-const app = express();
-const PORT = 3000;
-
-// ✅ Use a Connection Pool
-const db = mysql.createPool({
-  connectionLimit: 10,
-  host: "localhost",
-  user: "root",
-  password: "Pikachu", // ✅ Update this
-  database: "task_management",
-});
-app.use(
-  cors({
-    origin: "http://127.0.0.1:5500", // Allow frontend
-    methods: "GET, POST, PUT, DELETE",
-    allowedHeaders: "Content-Type",
-  })
-);
+const app = express(); // ✅ Initialize Express App
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // ✅ Add this to parse JSON requests
 
-// ✅ Improved Query Handling with Connection Pool
-app.post("/add-task", (req, res) => {
-  console.log("Incoming request body:", req.body);
-
-  const {
-    owner,
-    taskName,
-    description = "",
-    startDate = null,
-    dueDate = null,
-    reminder = null,
-    priority = "Moderate",
-    status,
-  } = req.body;
-
-  if (!taskName || !status || !owner) {
-    console.error("Missing required fields!");
-    return res
-      .status(400)
-      .json({ message: "Task Name, Owner, and Status are required!" });
-  }
-  const reminderFormatted = reminder
-    ? new Date(reminder).toISOString().slice(0, 19).replace("T", " ")
-    : null;
-
-  const sql =
-    "INSERT INTO tasks (owner, task_name, description, start_date, due_date, reminder, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-  const values = [
-    owner,
-    taskName,
-    description,
-    startDate,
-    dueDate,
-    reminderFormatted,
-    priority,
-    status,
-  ];
-
-  db.getConnection((err, connection) => {
-    if (err) {
-      console.error("Database connection error:", err);
-      return res.status(500).json({ message: "Database connection error!" });
-    }
-
-    connection.query(sql, values, (err, result) => {
-      connection.release(); // ✅ Always release the connection
-
-      if (err) {
-        console.error("❌ Query execution error:", err);
-        return res
-          .status(500)
-          .json({ message: "Database error!", error: err.sqlMessage });
-      }
-      res.json({ message: "Task added successfully!" });
-    });
-  });
+// MySQL Database Connection
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "Pikachu",
+  database: "task_management",
 });
 
-// app.delete("/delete-task/:id", (req, res) => {
-//   const taskId = req.params.id;
+db.connect((err) => {
+  if (err) {
+    console.error("Database connection failed: " + err.message);
+  } else {
+    console.log("Connected to MySQL Database");
+  }
+});
 
-//   const sql = "DELETE FROM tasks WHERE id = ?";
-//   db.query(sql, [taskId], (err, result) => {
-//     if (err) {
-//       console.error("❌ Delete Task Error:", err);
-//       return res
-//         .status(500)
-//         .json({ message: "Database error!", error: err.sqlMessage });
-//     }
-//     if (result.affectedRows === 0) {
-//       return res.status(404).json({ message: "Task not found!" });
-//     }
-//     res.json({ message: "Task deleted successfully!" });
-//   });
-// });
-
+// Get All Tasks
 app.get("/tasks", (req, res) => {
-  const sql = "SELECT * FROM tasks";
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res
-        .status(500)
-        .json({ message: "Database error!", error: err.sqlMessage });
-    }
+  db.query("SELECT * FROM tasks", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
 
-// ✅ Start the Server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT} 🚀`);
+// Get Single Task
+app.get("/tasks/:taskId", (req, res) => {
+  const taskId = req.params.taskId;
+  const query = `
+    SELECT task_name, task_owner, reminder, assigned_to, description, 
+           start_date, due_date, priority, status 
+    FROM tasks WHERE id = ?`;
+
+  db.query(query, [taskId], (err, results) => {
+    if (err) {
+      console.error("DB Error:", err);
+      res.status(500).json({ error: "Database error" });
+    } else if (results.length === 0) {
+      res.status(404).json({ error: "Task not found" });
+    } else {
+      res.json(results[0]); // Send task details
+    }
+  });
+});
+
+// Add New Task
+app.post("/tasks", (req, res) => {
+  const {
+    task_owner = "Unknown",
+    task_name,
+    description,
+    start_date,
+    due_date,
+    priority,
+    status,
+  } = req.body;
+
+  console.log("Received Task Data:", req.body); // ✅ Debugging
+
+  const sql =
+    "INSERT INTO tasks (task_owner, task_name, description, start_date, due_date, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+  db.query(
+    sql,
+    [
+      task_owner,
+      task_name,
+      description,
+      start_date,
+      due_date,
+      priority,
+      status,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Database Insert Error:", err);
+        return res.status(500).json({ error: err.message });
+      }
+
+      console.log("Task Added with ID:", result.insertId); // ✅ Debugging
+      res.json({ message: "Task added successfully", taskId: result.insertId });
+    }
+  );
+});
+
+// Update Task
+app.put("/tasks/:id", async (req, res) => {
+  try {
+    const taskId = req.params.id;
+    const { task_name, description, due_date, priority, status } = req.body;
+
+    console.log("Updating Task ID:", taskId);
+    console.log("Received Data:", req.body);
+
+    if (!taskId) return res.status(400).json({ error: "Task ID is missing" });
+
+    const sql =
+      "UPDATE tasks SET task_name=?, description=?, due_date=?, priority=?, status=? WHERE id=?";
+    const values = [task_name, description, due_date, priority, status, taskId];
+
+    const [result] = await db.query(sql, values);
+
+    if (result.affectedRows > 0) {
+      res.json({ message: "Task updated successfully" });
+    } else {
+      res.status(404).json({ error: "Task not found" });
+    }
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+// Delete Task
+app.delete("/tasks/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM tasks WHERE id = ?", [id], (err) => {
+    if (err) {
+      console.error("Database Delete Error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "Task deleted successfully" });
+  });
+});
+
+// Start the Server
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
 });
