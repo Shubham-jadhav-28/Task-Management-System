@@ -8,14 +8,14 @@ function fetchTasks() {
       const taskList = document.getElementById("taskList");
       taskList.innerHTML = ""; // Clear old tasks
 
-      // ✅ Count task statistics
+      // Count task
       let totalTasks = tasks.length;
       let openTasks = tasks.filter((task) => task.status === "Open").length;
       let completedTasks = tasks.filter(
         (task) => task.status === "Completed"
       ).length;
 
-      // ✅ Update task counters dynamically
+      //Update task
       document.getElementById("totalTasks").innerText = totalTasks;
       document.getElementById("openTasks").innerText = openTasks;
       document.getElementById("completedTasks").innerText = completedTasks;
@@ -156,7 +156,6 @@ function showUpdateModal(
   document.body.appendChild(modal);
 }
 
-// Function to update task details
 // Ensure updateTask is globally accessible
 window.updateTask = function () {
   const taskId = document.getElementById("updateTaskId").value;
@@ -194,7 +193,7 @@ window.updateTask = function () {
     });
 };
 
-// ✅ Format Date to YYYY-MM-DD
+// Format Date to YYYY-MM-DD
 function formatDate(dateString) {
   if (!dateString) return null; // If no date, return NULL
   const date = new Date(dateString);
