@@ -99,7 +99,7 @@
                         <div class="col-12 d-flex gap-2">
                             <button type="submit" class="btn btn-primary">Submit</button>
                             <button type="button" class="btn btn-primary" id="submitNew" onclick="window.location.href='index1.html'">Submit and New</button>
-                            <button type="button" class="btn btn-secondary">Cancel</button>
+                            <button type="button" class="btn btn-secondary"  onclick="window.location.href='index3.html'">Cancel</button>
                         </div>
                     </div>
                 </form>
@@ -129,11 +129,11 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Task Added Response:", data); // Debugging
+                    console.log("Task Added Response:", data); 
 
                     if (data.taskId) {
                         alert("Task added successfully!");
-                        window.location.href = `index2.html?taskId=${data.taskId}`; // Redirect with taskId
+                        window.location.href = `index2.html?taskId=${data.taskId}`; 
                     } else {
                         alert("Error: Task ID missing in response");
                     }
