@@ -92,31 +92,52 @@ app.post("/tasks", (req, res) => {
 });
 
 // Update Task
-app.put("/tasks/:id", async (req, res) => {
-  try {
-    const taskId = req.params.id;
-    const { task_name, description, due_date, priority, status } = req.body;
+app.put("/tasks/:id", (req, res) => {
+  const taskId = req.params.id;
+  let { task_name, task_owner, start_date, due_date, priority, status } =
+    req.body;
 
-    console.log("Updating Task ID:", taskId);
-    console.log("Received Data:", req.body);
+  // ✅ Ensure NULL values are handled correctly
+  task_owner = task_owner && task_owner.trim() !== "" ? task_owner : null;
+  start_date = start_date && start_date.trim() !== "" ? start_date : null;
+  due_date = due_date && due_date.trim() !== "" ? due_date : null;
 
-    if (!taskId) return res.status(400).json({ error: "Task ID is missing" });
+  console.log("🔹 Received Data for Update:", {
+    taskId,
+    task_name,
+    task_owner,
+    start_date,
+    due_date,
+    priority,
+    status,
+  });
 
-    const sql =
-      "UPDATE tasks SET task_name=?, description=?, due_date=?, priority=?, status=? WHERE id=?";
-    const values = [task_name, description, due_date, priority, status, taskId];
+  const sql = `
+      UPDATE tasks 
+      SET task_name = ?, task_owner = ?, start_date = ?, due_date = ?, priority = ?, status = ? 
+      WHERE id = ?`;
 
-    const [result] = await db.query(sql, values);
+  db.query(
+    sql,
+    [task_name, task_owner, start_date, due_date, priority, status, taskId],
+    (err, result) => {
+      if (err) {
+        console.error("❌ Database Update Error:", err);
+        return res.status(500).json({ error: "Database update failed" });
+      }
 
-    if (result.affectedRows > 0) {
-      res.json({ message: "Task updated successfully" });
-    } else {
-      res.status(404).json({ error: "Task not found" });
+      console.log("✅ Database Update Success:", result);
+
+      if (result.affectedRows === 0) {
+        console.warn("⚠ No rows updated. Check if the ID exists.");
+        return res
+          .status(404)
+          .json({ error: "Task not found or no changes made" });
+      }
+
+      res.json({ message: "Task updated successfully", updatedTask: req.body });
     }
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ error: "Database error" });
-  }
+  );
 });
 
 // Delete Task
@@ -135,3 +156,24 @@ app.delete("/tasks/:id", (req, res) => {
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
+// // Redirect with Task ID
+// function redirectToForm(taskId) {
+//   if (!taskId) {
+//     alert("Task ID missing. Cannot redirect.");
+//     return;
+//   }
+//   sessionStorage.setItem("taskId", taskId); // Store Task ID
+//   window.location.href = "index2.html"; // Redirect
+// }
+
+// // Retrieve Task ID on index2.html
+// window.onload = function () {
+//   let taskId = sessionStorage.getItem("taskId");
+
+//   if (!taskId) {
+//     alert("Error: Task ID missing. Redirecting...");
+//     window.location.href = "index.html"; // Redirect back
+//   } else {
+//     console.log("Task ID:", taskId); // Debugging
+//   }
+// };

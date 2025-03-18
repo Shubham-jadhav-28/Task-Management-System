@@ -130,19 +130,21 @@
               return;
             }
 
+            const taskOwner = task.task_owner || "Unknown";
+            const ownerInitial = taskOwner.charAt(0).toUpperCase(); // Extract First Letter
+
             document.getElementById("taskName").textContent =
               task.task_name || "No name";
             document.getElementById(
               "taskInitiator"
-            ).textContent = `Initiated By ${task.task_owner || "Unknown"}`;
-            document.getElementById("taskOwner").textContent =
-              task.task_owner || "Unknown";
-            document.getElementById("taskOwnerTable").textContent =
-              task.task_owner || "Unknown";
+            ).textContent = `Initiated By ${taskOwner}`;
+            document.getElementById("taskOwner").textContent = taskOwner;
+            document.getElementById("taskOwnerTable").textContent = taskOwner;
             document.getElementById("taskNameTable").textContent =
               task.task_name || "No name";
             document.getElementById("description").textContent =
               task.description || "No description";
+
             document.getElementById("startDate").textContent = formatDate(
               task.start_date
             );
@@ -153,19 +155,37 @@
               task.due_date
             );
 
-            document.getElementById("reminder").textContent = task.reminder
-              ? task.reminder
-              : "No reminder set";
+            document.getElementById("reminder").textContent = formatDate(
+              "2025-03-20T12:00:00Z"
+            );
+
             document.getElementById("assignedTo").textContent = task.assigned_to
               ? task.assigned_to
-              : "-";
+              : task.task_owner || "-";
 
             document.getElementById("priority").textContent =
               task.priority || "Not set";
-            document.getElementById("status").textContent =
-              task.status || "Not set";
-            document.getElementById("statusTable").textContent =
-              task.status || "Not set";
+
+            const statusText = task.status?.toLowerCase();
+            let displayStatus = "Not set";
+            if (statusText === "open") displayStatus = "Open";
+            else if (statusText === "in progress")
+              displayStatus = "In Progress";
+            else if (statusText === "completed") displayStatus = "Completed";
+
+            document.getElementById("status").textContent = displayStatus;
+            document.getElementById("statusTable").textContent = displayStatus;
+
+            document.querySelector(
+              ".d-flex.align-items-center.mb-3 .badge.bg-primary"
+            ).textContent = ownerInitial;
+
+            const commentBadge = document.querySelectorAll(
+              ".d-flex.align-items-center .badge.bg-primary"
+            );
+            if (commentBadge.length > 1) {
+              commentBadge[commentBadge.length - 1].textContent = ownerInitial;
+            }
           })
           .catch((error) => {
             console.error("Fetch Task Details Error:", error);

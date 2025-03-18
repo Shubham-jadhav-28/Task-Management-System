@@ -40,20 +40,28 @@
         <li class="nav-item">
           <a class="nav-link active" href="#">All Tasks</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" onclick="window.location.href='index2.html'"
-            >Form View</a
-          >
-        </li>
+        <a
+          class="nav-link"
+          href="#"
+          onclick="window.location.href='index2.html'"
+          >Form View</a
+        >
       </ul>
 
       <!-- Filter Section -->
       <div class="d-flex justify-content-between align-items-center mt-3">
         <div class="col-md-6 text-start text-md-start d-flex gap-2">
-          <span class="border p-1 rounded">Total <strong>4</strong></span>
-          <span class="border p-1 rounded">Open <strong>2</strong></span>
-          <span class="border p-1 rounded">Completed <strong>2</strong></span>
+          <span class="border p-1 rounded"
+            >Total <strong id="totalTasks">0</strong></span
+          >
+          <span class="border p-1 rounded"
+            >Open <strong id="openTasks">0</strong></span
+          >
+          <span class="border p-1 rounded"
+            >Completed <strong id="completedTasks">0</strong></span
+          >
         </div>
+
         <button
           class="btn btn-primary"
           onclick="window.location.href='index1.html'"
@@ -136,106 +144,10 @@
         </ul>
       </div>
     </div>
-    <script>
-      // Fetch and display tasks
-      function fetchTasks() {
-        fetch("http://localhost:5000/tasks")
-          .then((response) => response.json())
-          .then((tasks) => {
-            const taskList = document.getElementById("taskList");
-            taskList.innerHTML = ""; // Clear previous content
-
-            tasks.forEach((task) => {
-              const taskItem = document.createElement("li");
-              taskItem.classList.add(
-                "list-group-item",
-                "d-flex",
-                "justify-content-between",
-                "align-items-center"
-              );
-
-              // Convert due_date to day name (e.g., "Monday")
-              const dueDate = new Date(task.due_date);
-              const dayName = dueDate.toLocaleDateString("en-US", {
-                weekday: "long",
-              });
-
-              taskItem.innerHTML = `
-                <div class="col-8 d-flex align-items-center">
-                    <input type="checkbox" class="form-check-input mx-3 ms-0">
-                    <div>
-                        <p class="mb-0 fw-semibold">${task.task_name}</p>
-                        <p class="mb-0 text-primary">${
-                          task.task_owner || "No Owner"
-                        }</p>
-                        <small class="text-muted">${
-                          dayName || "No Due Date"
-                        }</small>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex align-items-center justify-content-between">
-                    <span class=" text-truncate">${
-                      task.task_owner || "Not Assigned"
-                    }</span>
-                    <button class="btn btn-warning btn-sm ms-2" onclick="updateTask(${
-                      task.id
-                    }, '${task.task_name}')">Update</button>
-                    <button class="btn btn-danger btn-sm ms-2" onclick="deleteTask(${
-                      task.id
-                    })">Delete</button>
-                </div>
-              `;
-
-              taskList.appendChild(taskItem);
-            });
-          })
-          .catch((error) => console.error("Fetch Tasks Error:", error));
-      }
-
-      // Update a task
-      function updateTask(taskId, currentTaskName) {
-        const newTaskName = prompt("Enter new task name:", currentTaskName);
-        if (!newTaskName) return;
-
-        fetch(`http://localhost:5000/tasks/${taskId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ task_name: newTaskName }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Update Response:", data);
-            alert("Task updated successfully!");
-            fetchTasks(); // Refresh task list after update
-          })
-          .catch((error) => console.error("Update Error:", error));
-      }
-
-      // Delete a task
-      function deleteTask(taskId) {
-        if (!confirm("Are you sure you want to delete this task?")) return;
-
-        fetch(`http://localhost:5000/tasks/${taskId}`, {
-          method: "DELETE",
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Delete Response:", data);
-            alert("Task deleted successfully!");
-            fetchTasks(); // Refresh task list after deletion
-          })
-          .catch((error) => console.error("Delete Error:", error));
-      }
-
-      // Load tasks when the page loads
-      document.addEventListener("DOMContentLoaded", fetchTasks);
-    </script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="update.js"></script>
     <script src="server.js"></script>
   </body>
 </html>
