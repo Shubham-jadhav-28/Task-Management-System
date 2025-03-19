@@ -47,7 +47,7 @@ function fetchTasks() {
                     </div>
                 </div>
   
-               <div class="col-12 col-sm-5 col-md-5 d-flex flex-column flex-md-row align-items-center justify-content-md-end gap-2 mt-2 mt-md-0">
+               <div class="col-12 col-sm-5 col-md-5 d-flex flex-column flex-md-row align-items-center justify-content-md-center gap-2 mt-2 mt-md-0">
           <span class="text-truncate">${
             task.task_owner || "Not Assigned"
           }</span>
@@ -55,9 +55,9 @@ function fetchTasks() {
               onclick="showUpdateModal(${task.id}, '${task.task_name}', '${
           task.task_owner || ""
         }', '${task.start_date || ""}', '${task.due_date || ""}', '${
-          task.priority || "Medium"
+          task.priority || "Moderate"
         }', '${task.status || "Open"}')">
-            Update
+            Edit
           </button>
           <button class="btn btn-danger btn-sm w-12 w-md-auto" onclick="deleteTask(${
             task.id
@@ -78,14 +78,6 @@ function fetchTasks() {
       });
     })
     .catch((error) => console.error("Fetch Tasks Error:", error));
-}
-
-// Function to format date to YYYY-MM-DD
-function formatDate(dateString) {
-  if (!dateString) return null; // If no date, return null
-
-  const date = new Date(dateString);
-  return date.toISOString().split("T")[0]; // Converts to YYYY-MM-DD
 }
 
 // Function to show the pop-up modal for updating a task
@@ -131,8 +123,8 @@ function showUpdateModal(
                   currentPriority === "Low" ? "selected" : ""
                 }>Low</option>
                 <option ${
-                  currentPriority === "Medium" ? "selected" : ""
-                }>Medium</option>
+                  currentPriority === "Moderate" ? "selected" : ""
+                }>Moderate</option>
                 <option ${
                   currentPriority === "High" ? "selected" : ""
                 }>High</option>
@@ -151,7 +143,7 @@ function showUpdateModal(
                 }>Completed</option>
             </select><br>
     
-            <button onclick="updateTask()" class="btn btn-primary">Save Changes</button>
+            <button onclick="updateTask()" class="btn btn-primary">Update Changes</button>
             <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
         </div>`;
 
