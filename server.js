@@ -25,9 +25,13 @@ db.connect((err) => {
 
 // Get All Tasks
 app.get("/tasks", (req, res) => {
-  db.query("SELECT * FROM tasks", (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
+  db.query("SELECT * FROM tasks ORDER BY id ASC", (err, results) => {
+    if (err) {
+      console.error("Error fetching tasks:", err);
+      res.status(500).send("Error fetching tasks");
+    } else {
+      res.json(results); // Send tasks sorted by ID in ascending order
+    }
   });
 });
 
