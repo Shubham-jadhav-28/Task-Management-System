@@ -104,9 +104,9 @@
         if (!isoDate) return "Not set";
         const date = new Date(isoDate);
         return date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
           day: "numeric",
+          month: "short",
+          year: "numeric",
         });
       }
 

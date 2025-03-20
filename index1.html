@@ -21,7 +21,7 @@
             Close"></button> -->
       <div class="card">
         <div class="card-body">
-          <form id="taskForm">
+          <form id="taskForm" class="needs-validation" novalidate>
             <div class="row mb-3 align-items-center">
               <div class="col-md-2">
                 <label class="form-label">Task Owner:</label>
@@ -34,8 +34,10 @@
                   placeholder="Enter Name"
                   required
                 />
+                <div class="invalid-feedback">Task Owner is required.</div>
               </div>
             </div>
+
             <div class="row mb-3">
               <div class="col-md-2">
                 <label class="form-label">Task Name *</label>
@@ -47,8 +49,10 @@
                   class="form-control"
                   required
                 />
+                <div class="invalid-feedback">Task Name is required.</div>
               </div>
             </div>
+
             <div class="row mb-3">
               <div class="col-md-2">
                 <label class="form-label">Description</label>
@@ -57,20 +61,41 @@
                 <textarea class="form-control" name="description"></textarea>
               </div>
             </div>
+
             <div class="row">
               <div class="col-md-2 mb-3">
                 <label class="form-label">Start Date</label>
               </div>
               <div class="col-md-9">
-                <input type="date" class="form-control" name="start_date" />
+                <input
+                  type="date"
+                  class="form-control"
+                  name="start_date"
+                  id="start_date"
+                  required
+                />
+                <div class="invalid-feedback">
+                  Start Date cannot be in the past.
+                </div>
               </div>
+
               <div class="col-md-2 mb-3">
                 <label class="form-label">Due Date</label>
               </div>
               <div class="col-md-9">
-                <input type="date" class="form-control" name="due_date" />
+                <input
+                  type="date"
+                  class="form-control"
+                  name="due_date"
+                  id="due_date"
+                  required
+                />
+                <div class="invalid-feedback">
+                  Due Date must be after Start Date.
+                </div>
               </div>
             </div>
+
             <div class="row mb-3">
               <div class="col-md-2">
                 <label class="form-label">Reminder</label>
@@ -79,11 +104,15 @@
                 <input
                   type="datetime-local"
                   class="form-control"
-                  id="reminderInput"
+                  id="reminder"
                   name="reminder"
                 />
+                <div class="invalid-feedback">
+                  Reminder must be between Start Date and Due Date.
+                </div>
               </div>
             </div>
+
             <div class="row mb-3">
               <div class="col-md-2 mb-3">
                 <label class="form-label">Priority</label>
@@ -95,23 +124,22 @@
                   <option value="Low">Low</option>
                 </select>
               </div>
-              <div class="col-md-1 d-flex align-items-center">
-                <i class="fa-solid fa-plus h-5 mb-2"></i>
-              </div>
+            </div>
+
+            <div class="row mb-3">
               <div class="col-md-2">
                 <label class="form-label">Status *</label>
               </div>
               <div class="col-md-9">
                 <select name="status" class="form-select" required>
                   <option value="Open">Open</option>
-                  <option value="Open">In Progress</option>
+                  <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
                 </select>
-              </div>
-              <div class="col-md-1 d-flex align-items-center">
-                <i class="fa-solid fa-plus h-5 mb-2"></i>
+                <div class="invalid-feedback">Status is required.</div>
               </div>
             </div>
+
             <div class="row">
               <div class="col-12 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -137,6 +165,99 @@
       </div>
     </div>
     <script>
+      document
+        .getElementById("taskForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const form = this;
+          form.classList.add("was-validated");
+
+          let isValid = form.checkValidity();
+          const today = new Date().toISOString().split("T")[0];
+
+          const startDate = document.querySelector("[name='start_date']").value;
+          const dueDate = document.querySelector("[name='due_date']").value;
+          const reminder = document.querySelector("[name='reminder']").value;
+
+          if (startDate && startDate < today) {
+            document
+              .querySelector("[name='start_date']")
+              .classList.add("is-invalid");
+            isValid = false;
+          } else {
+            document
+              .querySelector("[name='start_date']")
+              .classList.remove("is-invalid");
+          }
+
+          if (dueDate && startDate && dueDate < startDate) {
+            document
+              .querySelector("[name='due_date']")
+              .classList.add("is-invalid");
+            isValid = false;
+          } else {
+            document
+              .querySelector("[name='due_date']")
+              .classList.remove("is-invalid");
+          }
+
+          if (reminder) {
+            const reminderDate = new Date(reminder);
+            if (
+              (startDate && reminderDate < new Date(startDate)) ||
+              (dueDate && reminderDate > new Date(dueDate))
+            ) {
+              document
+                .querySelector("[name='reminder']")
+                .classList.add("is-invalid");
+              isValid = false;
+            } else {
+              document
+                .querySelector("[name='reminder']")
+                .classList.remove("is-invalid");
+            }
+          }
+
+          if (!isValid) {
+            return; // Stop submission if validation fails
+          }
+
+          // Collect form data
+          const taskData = {
+            task_owner: document.querySelector("[name='task_owner']").value,
+            task_name: document.querySelector("[name='task_name']").value,
+            description: document.querySelector("[name='description']").value,
+            reminder: document.querySelector("[name='reminder']").value,
+            start_date: document.querySelector("[name='start_date']").value,
+            due_date: document.querySelector("[name='due_date']").value,
+            priority: document.querySelector("[name='priority']").value,
+            status: document.querySelector("[name='status']").value,
+          };
+
+          console.log("Sending Task Data:", taskData);
+
+          // Send data using Fetch API
+          fetch("http://localhost:5000/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(taskData),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Task Added Response:", data);
+
+              if (data.taskId) {
+                alert("Task added successfully!");
+                window.location.href = `index2.html?taskId=${data.taskId}`;
+              } else {
+                alert("Error: Task ID missing in response");
+              }
+            })
+            .catch((error) => console.error("Add Task Error:", error));
+        });
+    </script>
+
+    <!-- <script>
       document
         .getElementById("taskForm")
         .addEventListener("submit", function (event) {
@@ -172,7 +293,7 @@
             })
             .catch((error) => console.error("Add Task Error:", error));
         });
-    </script>
+    </script> -->
 
     <script src="server.js"></script>
 
